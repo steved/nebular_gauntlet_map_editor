@@ -1,4 +1,5 @@
 Dir.chdir(File.expand_path(File.dirname(__FILE__)))
+require 'rubygems'
 gem "fxruby"
 require 'fox16'
 include Fox

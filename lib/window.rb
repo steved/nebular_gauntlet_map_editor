@@ -201,6 +201,7 @@ class MainWindow < FXMainWindow
 
 		begin
 			yaml_file = "#{@map.dir}/data/entities.yaml"
+                        yaml_file += ".1_8" if RUBY_VERSION =~ /1.8/
 			$data = YAML::load(File.open(yaml_file))	
 		rescue => e
 			puts "Error loading YAML file: #{e}"

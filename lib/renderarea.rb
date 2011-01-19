@@ -18,13 +18,13 @@ class RenderArea
 		@canvas.connect(SEL_PAINT) {|sender, sel, event| paintEvent(event)}
 
 		$data["entities"].each do |e|
-			@entities << FXPoint.new(e.x, e.y)
+			@entities << [e.x, e.y]
 		end
 		$data["flags"].each do |flag|
-			@flags << FXPoint.new(flag.x, flag.y)
+			@flags << [flag.x, flag.y]
 		end
 		$data["spawns"].each do |spoint|
-			@spawn_points << FXPoint.new(spoint.x, spoint.y) if spoint.class == SpawnPoint
+			@spawn_points << [spoint.x, spoint.y] if spoint.class == SpawnPoint
 		end
 		toggle_bands(true)
 		@canvas.update
@@ -32,7 +32,7 @@ class RenderArea
 
 	def mouseMoveEvent(e)
 		if @left_down
-			@rubberband.set_geometry(FXRectangle.new(@origin, FXPoint.new(e.win_x, e.win_y)))
+			@rubberband.set_geometry(FXRectangle.new(@origin[0], @origin[1], e.win_x, e.win_y))
 			@canvas.update
 		end
 	end
@@ -42,11 +42,11 @@ class RenderArea
 			@rubberband = nil
 		else
 			@rubberbands.each {|x| x.hide}
-			@origin = FXPoint.new(e.click_x, e.click_y)
+			@origin = [e.click_x, e.click_y]
 			if !@rubberband
 				@rubberband = FXRubberBand.new
 			end
-			@rubberband.set_geometry(FXRectangle.new(@origin, FXSize.new(1, 1)))
+			@rubberband.set_geometry(FXRectangle.new(@origin[0], @origin[1], 1, 1))
 			@rubberband.show
 			@left_down = true
 		end
@@ -56,23 +56,23 @@ class RenderArea
 		@left_down = false
 		if !e.moved?
 			if @tool == 1
-				entity = FXPoint.new(e.click_x, e.click_y)
-				top_x = entity.x - (@entity_width / 2).to_i
-				top_y = entity.y - (@entity_height / 2).to_i
-				point = FXPoint.new(top_x, top_y)
+				entity = [e.click_x, e.click_y]
+				top_x = entity[0] - (@entity_width / 2).to_i
+				top_y = entity[1] - (@entity_height / 2).to_i
+				point = [top_x, top_y]
 				@entities << point
-				$data["entities"] << Entity.new($entity_names[0].delete(" "), "data/images/icon.bmp", point.x, point.y)
+				$data["entities"] << Entity.new($entity_names[0].delete(" "), "data/images/icon.bmp", point[0], point[1])
 			elsif @tool == 2   		   
-				type, object = find_object(FXPoint.new(e.click_x, e.click_y))
+				type, object = find_object(e.click_x, e.click_y)
 				if type == :entity
 					@entities.delete(object)
-					$data["entities"].delete_if {|i| i.x == object.x && i.y == object.y}
+					$data["entities"].delete_if {|i| i.x == object[0] && i.y == object[1]}
 				elsif type == :flag
 					@flags.delete(object)
-					$data["flags"].delete_if {|i| i.x == object.x && i.y == object.y}
+					$data["flags"].delete_if {|i| i.x == object[0] && i.y == object[1]}
 				elsif type == :spawn_point
 					@spawn_points.delete(object)
-					$data["spawns"].delete_if {|i| i.x == object.x && i.y == object.y}
+					$data["spawns"].delete_if {|i| i.x == object[0] && i.y == object[1]}
 				elsif type == :band
 					object.hide
 					rect = object.geometry
@@ -91,37 +91,34 @@ class RenderArea
 					end
 				end
 			elsif @tool == 3
-				flag = FXPoint.new(e.click_x, e.click_y)
-				top_x = flag.x - (@entity_width / 2).to_i
-				top_y = flag.y - (@entity_height / 2).to_i
-				point = FXPoint.new(top_x, top_y)
-				@flags << point
-				$data["flags"] << Flag.new(point.x, point.y, :red)
+				top_x = e.click_x - (@entity_width / 2).to_i
+				top_y = e.click_y - (@entity_height / 2).to_i
+				@flags << [top_x, top_y]
+				$data["flags"] << Flag.new(top_x, top_y, :red)
 			elsif @tool == 4
 				spoint = FXPoint.new(e.click_x, e.click_y)
-				top_x = spoint.x - (@entity_width / 2).to_i
-				top_y = spoint.y - (@entity_height / 2).to_i
-				point = FXPoint.new(top_x, top_y)
-				@spawn_points << point
-				$data["spawns"] << SpawnPoint.new(point.x, point.y)
+				top_x = e.click_x - (@entity_width / 2).to_i
+				top_y = e.click_y - (@entity_height / 2).to_i
+				@spawn_points << [top_x, top_y]
+				$data["spawns"] << SpawnPoint.new(top_x, top_y)
 			end
 			@canvas.update
 		end
 	end 
 
-	def find_object(e)
+	def find_object(x, y)
 		@entities.each do |entity|
-			if FXRectangle.new(entity, FXSize.new(@entity_width, @entity_height)).contains?(e)
+			if FXRectangle.new(entity[0], entity[1], @entity_width, @entity_height).contains?(x, y)
 				return :entity, entity
 			end
 		end
 		@flags.each do |flag|
-			if FXRectangle.new(flag, FXSize.new(@entity_width, @entity_height)).contains?(e)
+			if FXRectangle.new(flag[0], flag[1], @entity_width, @entity_height).contains?(x, y)
 				return :flag, flag
 			end
 		end
 		@spawn_points.each do |spoint|
-			if FXRectangle.new(spoint, FXSize.new(@entity_width, @entity_height)).contains?(e)
+			if FXRectangle.new(spoint[0], spoint[1], @entity_width, @entity_height).contains?(x, y)
 				return :spawn_point, spoint
 			end
 		end
@@ -179,7 +176,7 @@ class RenderArea
 	def contextMenuEvent(e)
 		unless e.moved?
 			FXMenuPane.new(@canvas) do |menuPane|  
-				type, object = find_object(FXPoint.new(e.click_x, e.click_y))
+				type, object = find_object(e.click_x, e.click_y)
 				return if object.nil?
 				if type == :entity
 					prop = FXMenuCommand.new(menuPane, "Properties")
@@ -197,7 +194,7 @@ class RenderArea
 					prop.connect(SEL_COMMAND) {selection_properties()}
 				end
 				menuPane.create
-				@menuPos = FXPoint.new(object.x, object.y)
+				@menuPos = [object[0], object[1]]
 				menuPane.popup(nil, e.root_x, e.root_y)
 				$app.runModalWhileShown(menuPane)
 			end
@@ -259,17 +256,17 @@ class RenderArea
 
 			dc.foreground = "white"
 			@entities.each do |entity|
-				dc.drawEllipse(entity.x, entity.y, @entity_width, @entity_height)
+				dc.drawEllipse(entity[0], entity[1], @entity_width, @entity_height)
 			end
 
 			dc.foreground = "red"
 			@flags.each do |flag|
-				dc.drawEllipse(flag.x, flag.y, @entity_width, @entity_height)
+				dc.drawEllipse(flag[0], flag[1], @entity_width, @entity_height)
 			end
 
 			dc.foreground = "blue"
 			@spawn_points.each do |spoint|
-				dc.drawEllipse(spoint.x, spoint.y, @entity_width, @entity_height)
+				dc.drawEllipse(spoint[0], spoint[1], @entity_width, @entity_height)
 			end
 		end
 	end

@@ -102,7 +102,7 @@ class EntityDialog < GenericDialog
 		@pos = pos
 
 		$data["entities"].each do |entity|
-			if entity.x == @pos.x && entity.y == @pos.y
+			if entity.x == @pos[0] && entity.y == @pos[1]
 				@entity = entity.name.gsub("Powerup", " Powerup").gsub("Point", " Point")
 				@eimage = entity.image
 				@extra = entity.extra
@@ -149,7 +149,7 @@ class EntityDialog < GenericDialog
 
 	def accept
 		$data["entities"].each do |e|
-			if e.x == @pos.x && e.y == @pos.y
+			if e.x == @pos[0] && e.y == @pos[1]
 				e.name = @entity.delete(" ")
 				e.image = @image.text
 				e.extra ||= {}
@@ -175,7 +175,7 @@ class FlagDialog < GenericDialog
 		@team = :red
 
 		$data["flags"].each do |flag|
-			if flag.x == @pos.x && flag.y == @pos.y
+			if flag.x == @pos[0] && flag.y == @pos[1]
 				@team = flag.type
 			end
 		end     
@@ -194,7 +194,7 @@ class FlagDialog < GenericDialog
 
 	def accept
 		$data["flags"].each do |flag|
-			if flag.x == @pos.x && flag.y == @pos.y
+			if flag.x == @pos[0] && flag.y == @pos[1]
 				flag.type = @team
 			end
 		end
@@ -210,7 +210,7 @@ class SpawnPointDialog < GenericDialog
 	end
 
 	def accept
-		$data["spawns"] << SpawnPoint.new(@pos.x, @pos.y)
+		$data["spawns"] << SpawnPoint.new(@pos[0], @pos[1])
 		$data["spawns"].uniq!
 		super
 	end
